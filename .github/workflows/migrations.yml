@@ -1,0 +1,84 @@
+name: Checking migrations
+
+on:
+  push:
+    # trigger only on main branch
+    branches:
+      - main
+    # trigger only on changes to the following files
+    paths:
+      - "emishows/src/emishows/app/migrations/**"
+      - "emishows/src/emishows/app/models.py"
+      - ".github/workflows/migrations.yml"
+  pull_request:
+    # trigger only on main branch
+    branches:
+      - main
+    # trigger only on changes to the following files
+    paths:
+      - "emishows/src/emishows/app/migrations/**"
+      - "emishows/src/emishows/app/models.py"
+      - ".github/workflows/migrations.yml"
+
+# env for all jobs
+env:
+  CONDA_CACHE_DIR: ~/conda_pkgs_dir
+  POETRY_CACHE_DIR: ~/.cache/pypoetry
+  PIP_CACHE_DIR: ~/.cache/pip
+  # increase this value to manually reset cache
+  CACHE_NUMBER: 0
+
+jobs:
+  test:
+    name: Check migrations
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        # necessary for conda to work
+        shell: bash -l {0}
+    steps:
+      - # get repository code
+        name: Checkout code
+        uses: actions/checkout@v2
+      - # get conda, poetry and pip cache (persistent between runs)
+        name: Cache packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ env.CONDA_CACHE_DIR }}
+            ${{ env.POETRY_CACHE_DIR }}
+            ${{ env.PIP_CACHE_DIR }}
+          key: ${{ runner.os }}-pkgs-${{ env.CACHE_NUMBER }}
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9.7"
+      - name: Set up pip cache
+        run: python3 -m pip config set global.cache-dir ${{ env.PIP_CACHE_DIR }}
+      - name: Install poetry
+        run: python3 -m pip install -r requirements.txt
+      - name: Set up poetry cache
+        run: poetry config cache-dir ${{ env.POETRY_CACHE_DIR }}
+      - # create and activate conda environment
+        name: Set up environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: emishows
+          environment-file: environment.yml
+          # necessary for caching to work
+          use-only-tar-bz2: true
+      - # install only dependencies
+        name: Install dependencies
+        working-directory: emishows
+        run: poetry install --no-root
+      - # workaround for non-editable install, waiting for https://github.com/python-poetry/poetry/issues/1382
+        name: Build package
+        working-directory: emishows
+        run: poetry build -f wheel
+      - # use pip to install wheel produced in previous step
+        name: Install package
+        working-directory: emishows
+        # python from conda should be called just by 'python', not 'python3'
+        run: python -m pip install --no-deps --no-index --no-cache-dir --find-links=dist emishows
+      - name: Check migrations
+        run: emishows-manage makemigrations --check --dry-run

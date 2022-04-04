@@ -1,0 +1,4 @@
+name: emishows
+dependencies:
+  - python==3.9.7
+  - pip==21.2.4
