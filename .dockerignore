@@ -1,0 +1,8 @@
+*
+!emishows/src/**
+!emishows/pyproject.toml
+!emishows/poetry.lock
+!emishows/LICENSE
+!emishows/README.md
+!environment.yml
+!requirements.txt
