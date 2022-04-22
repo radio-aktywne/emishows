@@ -14,7 +14,7 @@ python = "^3.9"
 typer = { version = "^0.4", extras = ["all"] }
 click = "~8.0.0"
 djangorestframework = "^3.13"
-Django = "~4.0.0"
+Django = "~4.0.4"
 psycopg2-binary = "^2.9"
 django-cockroachdb = "~4.0.0"
 django-filter = "^21.1"
