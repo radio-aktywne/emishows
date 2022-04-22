@@ -4,8 +4,8 @@
 
 emission shows 🎭
 
-[![Running tests](https://github.com/radio-aktywne/emishows/actions/workflows/test.yml/badge.svg)](https://github.com/radio-aktywne/emishows/actions/workflows/test.yml)
-[![Deploying docs](https://github.com/radio-aktywne/emishows/actions/workflows/docs.yml/badge.svg)](https://github.com/radio-aktywne/emishows/actions/workflows/docs.yml)
+[![Tests](https://github.com/radio-aktywne/emishows/actions/workflows/test-docker.yml/badge.svg)](https://github.com/radio-aktywne/emishows/actions/workflows/test-docker.yml)
+[![Docs](https://github.com/radio-aktywne/emishows/actions/workflows/docs.yml/badge.svg)](https://github.com/radio-aktywne/emishows/actions/workflows/docs.yml)
 
 </div>
 

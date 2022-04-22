@@ -3,7 +3,7 @@ ARG MINICONDA_IMAGE_TAG=4.10.3-alpine
 
 FROM minio/mc:$MINIO_CLIENT_IMAGE_TAG AS mc
 
-FROM continuumio/miniconda3:$MINICONDA_IMAGE_TAG
+FROM continuumio/miniconda3:$MINICONDA_IMAGE_TAG AS base
 
 COPY --from=mc /usr/bin/mc /usr/bin/mc
 
@@ -34,18 +34,6 @@ SHELL ["conda", "run", "--no-capture-output", "-n", "emishows", "/bin/bash", "-c
 COPY ./emishows/pyproject.toml ./emishows/poetry.lock /tmp/emishows/
 WORKDIR /tmp/emishows
 
-# install dependencies only (notice that no source code is present yet) and delete cache
-RUN poetry install  --no-root && \
-    rm -rf ~/.cache/pypoetry
-
-# add source and necessary files
-COPY ./emishows/src/ /tmp/emishows/src/
-COPY ./emishows/LICENSE ./emishows/README.md /tmp/emishows/
-
-# build wheel by poetry and install by pip (to force non-editable mode)
-RUN poetry build -f wheel && \
-    python -m pip install --no-deps --no-index --no-cache-dir --find-links=dist emishows
-
 ENV EMISHOWS_DB_HOST=localhost \
     EMISHOWS_DB_PORT=34000 \
     EMISHOWS_EMITIMES_HOST=localhost \
@@ -56,4 +44,37 @@ ENV EMISHOWS_DB_HOST=localhost \
 
 EXPOSE 35000
 
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "emishows", "emishows", "--port", "35000"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "emishows"]
+
+FROM base AS test
+
+# install dependencies only (notice that no source code is present yet) and delete cache
+RUN poetry install --no-root --extras test && \
+    rm -rf ~/.cache/pypoetry
+
+# add source, tests and necessary files
+COPY ./emishows/src/ /tmp/emishows/src/
+COPY ./emishows/tests/ /tmp/emishows/tests/
+COPY ./emishows/LICENSE ./emishows/README.md /tmp/emishows/
+
+# build wheel by poetry and install by pip (to force non-editable mode)
+RUN poetry build -f wheel && \
+    python -m pip install --no-deps --no-index --no-cache-dir --find-links=dist emishows
+
+CMD ["pytest"]
+
+FROM base AS production
+
+# install dependencies only (notice that no source code is present yet) and delete cache
+RUN poetry install --no-root && \
+    rm -rf ~/.cache/pypoetry
+
+# add source and necessary files
+COPY ./emishows/src/ /tmp/emishows/src/
+COPY ./emishows/LICENSE ./emishows/README.md /tmp/emishows/
+
+# build wheel by poetry and install by pip (to force non-editable mode)
+RUN poetry build -f wheel && \
+    python -m pip install --no-deps --no-index --no-cache-dir --find-links=dist emishows
+
+CMD ["emishows", "--port", "35000"]
