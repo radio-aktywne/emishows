@@ -1,4 +1,4 @@
-name: Publish a docker image
+name: Registry
 
 on:
   release:
@@ -6,7 +6,8 @@ on:
       - published
 
 jobs:
-  docker-push:
+  registry:
+    name: Publish Docker image to GitHub registry
     runs-on: ubuntu-20.04
     permissions:
       contents: read

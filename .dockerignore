@@ -1,5 +1,6 @@
 *
 !emishows/src/**
+!emishows/tests/**
 !emishows/pyproject.toml
 !emishows/poetry.lock
 !emishows/LICENSE
